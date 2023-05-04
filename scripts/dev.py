@@ -9,4 +9,4 @@ requests_cache.install_cache("vliz_cache")
 load_dotenv()
 
 
-sync_to_vliz(dry_run=False, max_items=5)
+sync_to_vliz(dry_run=False, max_items=20)

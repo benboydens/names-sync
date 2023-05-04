@@ -6,6 +6,10 @@ import logging
 logger = logging.getLogger("namessync")
 
 
+class AlreadyExistsException(Exception):
+    pass
+
+
 class VlizSession:
 
     def __init__(self):
@@ -48,4 +52,6 @@ class VlizSession:
         token = self.token["token"]
         res = requests.post(url, headers={"Authorization": f"Bearer {token}"}, json=item)
         res.raise_for_status()
+        if res.status_code == 303:
+            raise AlreadyExistsException()
         return res.json()

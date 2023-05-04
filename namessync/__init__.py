@@ -1,5 +1,5 @@
 from namessync.obis import fetch_nonmatching
-from namessync.vliz import VlizSession
+from namessync.vliz import AlreadyExistsException, VlizSession
 import logging
 from termcolor import colored
 import pyworms
@@ -50,9 +50,9 @@ def sync_to_vliz(max_items=10, dry_run=False):
                 logger.error(colored(f"Error while querying WoRMS for {key}", "red"))
                 continue
             if has_exact_match:
-                logger.info(colored(f"Key {key} has exact match in WoRMS, skipping", "blue"))
+                logger.info(colored(f">>> Key {key} has exact match in WoRMS, skipping", "grey"))
             else:
-                logger.info(colored(f"Adding {key} to the annotated list", "green"))
+                logger.info(colored(f">>> Trying to add {key} to the annotated list", "yellow"))
                 data = {
                     "scientificName": item["scientificname"],
                     "scientificNameAuthorship": item["scientificnameauthorship"],
@@ -65,14 +65,14 @@ def sync_to_vliz(max_items=10, dry_run=False):
                     "datasets": [{"uuid": d.split(";")[0], "url": d.split(";")[1]} for d in item["datasets"].split("|")]
                 }
                 if not dry_run:
-                    res = session.add_annotated_list(data)
-                    date_added = datetime.strptime(res["dateAdded"][0:16], "%Y-%m-%dT%H:%M")
-                    time_past = datetime.now() - date_added
-                    if time_past.total_seconds() > 10800:
-                        logger.info(colored(f"Key {key} already existed", "blue"))
+                    try:
+                        session.add_annotated_list(data)
+                        logger.info(colored(f"    Added {key} to the annotated list", "green"))
+                    except AlreadyExistsException:
+                        logger.info(colored(f"    Key {key} already exists according to API", "red"))
 
                 if max_items is not None:
                     max_items = max_items - 1
                     if max_items == 0:
-                        logger.info(colored("Reached max items, stopping", "red"))
+                        logger.info(colored("Reached max items, stopping", "blue"))
                         break
