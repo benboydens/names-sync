@@ -68,11 +68,12 @@ def sync_to_vliz(max_items=10, dry_run=False):
                     try:
                         session.add_annotated_list(data)
                         logger.info(colored(f"    Added {key} to the annotated list", "green"))
+
+                        if max_items is not None:
+                            max_items = max_items - 1
+                            if max_items == 0:
+                                logger.info(colored("Reached max items, stopping", "blue"))
+                                break
+
                     except AlreadyExistsException:
                         logger.info(colored(f"    Key {key} already exists according to API", "red"))
-
-                if max_items is not None:
-                    max_items = max_items - 1
-                    if max_items == 0:
-                        logger.info(colored("Reached max items, stopping", "blue"))
-                        break
